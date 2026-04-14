@@ -61,10 +61,19 @@ if (!fs.existsSync(resumesDir)) {
 // Serve static files from 'uploads' directory
 app.use('/uploads', express.static(uploadsDir));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
+// Connect to MongoDB with better error handling
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+  .then(() => console.log('✓ MongoDB connected successfully'))
+  .catch(err => {
+    console.error('✗ MongoDB connection failed:', err.message);
+    console.error('Please check:');
+    console.error('1. Your internet connection');
+    console.error('2. MongoDB Atlas IP whitelist (add 0.0.0.0/0 for testing)');
+    console.error('3. MongoDB URI in .env file');
+  });
 
 // Import Routes
 const authRoutes = require('./routes/auth');

@@ -191,37 +191,63 @@ export default function RecruiterDashboard() {
 
         {/* Stats Section */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
-          <div className="card p-6 flex items-center"> {/* Use card class */}
+          <div 
+            className="card p-6 flex items-center cursor-pointer hover:border-primary transition-all" 
+            onClick={() => {
+              console.log("📊 Total Jobs card clicked");
+              router.push("/recruiter/dashboard");
+            }}
+          >
             <div className="p-3 rounded-full bg-primary bg-opacity-20 mr-4">
               <Briefcase className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="text-gray-400 text-sm">Total Jobs</p>
-              <p className="text-2xl font-bold text-foreground">{stats.totalJobs}</p> {/* Use text-foreground */}
+              <p className="text-2xl font-bold text-foreground">{stats.totalJobs}</p>
             </div>
           </div>
           
-          <div className="card p-6 flex items-center"> {/* Use card class */}
+          <div 
+            className="card p-6 flex items-center cursor-pointer hover:border-primary transition-all"
+            onClick={() => {
+              console.log("✅ Active Jobs card clicked");
+              // Filter to show only active jobs
+              const activeJobsList = jobs.filter(job => !job.isClosed);
+              console.log("Active jobs:", activeJobsList.length);
+            }}
+          >
             <div className="p-3 rounded-full bg-success bg-opacity-20 mr-4">
               <Clock className="h-6 w-6 text-success" />
             </div>
             <div>
               <p className="text-gray-400 text-sm">Active Jobs</p>
-              <p className="text-2xl font-bold text-foreground">{stats.activeJobs}</p> {/* Use text-foreground */}
+              <p className="text-2xl font-bold text-foreground">{stats.activeJobs}</p>
             </div>
           </div>
           
-          <div className="card p-6 flex items-center"> {/* Use card class */}
+          <div 
+            className="card p-6 flex items-center cursor-pointer hover:border-primary transition-all"
+            onClick={() => {
+              console.log("👥 Total Applicants card clicked");
+              router.push("/recruiter/track-applicants");
+            }}
+          >
             <div className="p-3 rounded-full bg-info bg-opacity-20 mr-4">
               <Users className="h-6 w-6 text-info" />
             </div>
             <div>
               <p className="text-gray-400 text-sm">Total Applicants</p>
-              <p className="text-2xl font-bold text-foreground">{stats.totalApplicants}</p> {/* Use text-foreground */}
+              <p className="text-2xl font-bold text-foreground">{stats.totalApplicants}</p>
             </div>
           </div>
           
-          <div className="card p-6 flex items-center"> {/* Use card class */}
+          <div 
+            className="card p-6 flex items-center cursor-pointer hover:border-primary transition-all"
+            onClick={() => {
+              console.log("🆕 New Applicants card clicked");
+              router.push("/recruiter/track-applicants");
+            }}
+          >
             <div className="p-3 rounded-full bg-warning bg-opacity-20 mr-4">
               <BarChart className="h-6 w-6 text-warning" />
             </div>

@@ -16,7 +16,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login form data:", formData);
+    console.log("🔐 Login attempt with:", formData.email);
 
     try {
       const res = await fetch("http://localhost:5000/api/auth/login", {
@@ -25,30 +25,44 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      console.log("Login response:", data);
+      console.log("📥 Login response status:", res.status);
 
-      if (!res.ok) throw new Error(data.msg || "Login failed");
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error("Access denied. Please check your credentials.");
+        }
+        throw new Error(data.msg || "Login failed");
+      }
+      
       if (data.token) {
+        console.log("✅ Token received, storing...");
         localStorage.setItem("token", data.token);
+        
         // Fetch user profile to get userType
+        console.log("📤 Fetching user profile...");
         const profileRes = await fetch("http://localhost:5000/api/auth/profile", {
           headers: { Authorization: `Bearer ${data.token}` },
           cache: "no-store",
         });
+        
         if (!profileRes.ok) throw new Error("Failed to fetch profile");
+        
         const user = await profileRes.json();
-        console.log("User profile after login:", user);
+        console.log("👤 User profile:", user.username, "Type:", user.userType);
+        
         localStorage.setItem("userType", user.userType);
         localStorage.setItem("userId", user._id);
+        
         const redirectPath = user.userType === "recruiter" ? "/recruiter/dashboard" : "/dashboard";
-        console.log("Redirecting to:", redirectPath);
-        toast.success("Login successful!");
+        console.log("🚀 Redirecting to:", redirectPath);
+        
+        toast.success(`Welcome back, ${user.username}!`);
         router.push(redirectPath);
       } else {
         throw new Error(data.msg || "No token received");
       }
     } catch (err) {
-      console.error("Login error:", err.message);
+      console.error("❌ Login error:", err.message);
       toast.error("Login failed: " + err.message);
     }
   };

@@ -333,10 +333,10 @@ export default function TrackApplicants() {
         </div>
 
         {showChatModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal">
-            <div className="bg-accent p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal p-4">
+            <div className="bg-accent p-6 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] flex flex-col modal-content">
               <h2 className="text-xl font-bold text-primary mb-4">Chat with Candidate</h2>
-              <div className="h-64 overflow-y-auto mb-4 bg-background p-2 rounded">
+              <div className="flex-1 overflow-y-auto mb-4 bg-background p-3 rounded min-h-[200px] max-h-[400px]">
                 {chatMessages.map((msg, index) => (
                   <div
                     key={index}

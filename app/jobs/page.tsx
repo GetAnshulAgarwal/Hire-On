@@ -105,32 +105,71 @@ export default function Jobs() {
   }, [router, statusFilter, showChatModal]);
 
   const handleApply = async (jobId) => {
-    if (!resumeFile || !coverLetter) {
-      toast.error("Please upload a resume and write a cover letter.");
+    console.log("🔵 Apply button clicked for job:", jobId);
+    
+    // Validation
+    if (!resumeFile) {
+      toast.error("Please upload a resume (PDF file).");
+      return;
+    }
+    
+    if (!coverLetter || coverLetter.trim().length < 10) {
+      toast.error("Please write a cover letter (minimum 10 characters).");
       return;
     }
 
     const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to apply for jobs.");
+      router.push("/");
+      return;
+    }
+    
+    // Disable button during submission
+    const submitButton = document.querySelector('[data-submit-apply]');
+    if (submitButton) submitButton.disabled = true;
+
     const formData = new FormData();
     formData.append("resume", resumeFile);
 
     try {
+      console.log("📤 Extracting resume...");
       const extractRes = await fetch("http://localhost:5000/api/resume/extract", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+      
       const extractData = await extractRes.json();
-      if (!extractRes.ok) throw new Error(extractData.error || `Resume extraction failed: ${extractRes.status}`);
+      
+      if (!extractRes.ok) {
+        if (extractRes.status === 403) {
+          throw new Error("You don't have permission to upload resumes. Please login as a candidate.");
+        }
+        throw new Error(extractData.error || extractData.msg || `Resume extraction failed: ${extractRes.status}`);
+      }
+      
       const { resumeText } = extractData;
+      console.log("✅ Resume extracted successfully");
 
+      console.log("📤 Submitting application...");
       const applyRes = await fetch("http://localhost:5000/api/applications/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ jobId, resumeText, coverLetter }),
       });
-      if (!applyRes.ok) throw new Error(`Application submission failed: ${applyRes.status}`);
-      const newApplication = await applyRes.json();
+      
+      const applyData = await applyRes.json();
+      
+      if (!applyRes.ok) {
+        if (applyRes.status === 403) {
+          throw new Error("You don't have permission to apply. Please login as a candidate.");
+        }
+        throw new Error(applyData.msg || `Application submission failed: ${applyRes.status}`);
+      }
+      
+      console.log("✅ Application submitted successfully!");
+      const newApplication = applyData;
       setAppliedJobs((prev) => [...prev, jobId]);
       setApplications((prev) => [...prev, newApplication]);
       setShowApplyModal(null);
@@ -138,12 +177,16 @@ export default function Jobs() {
       setCoverLetter("");
       toast.success("Application submitted successfully!");
     } catch (err) {
-      console.error("Error applying:", err.message);
-      toast.error(`Error applying: ${err.message}`);
-      if (err.message.includes("401")) {
+      console.error("❌ Error applying:", err.message);
+      toast.error(`Error: ${err.message}`);
+      if (err.message.includes("401") || err.message.includes("login")) {
         localStorage.removeItem("token");
         router.push("/");
       }
+    } finally {
+      // Re-enable button
+      const submitButton = document.querySelector('[data-submit-apply]');
+      if (submitButton) submitButton.disabled = false;
     }
   };
 
@@ -448,15 +491,18 @@ export default function Jobs() {
                 <div className="flex justify-end space-x-2">
                   <button
                     onClick={() => setShowApplyModal(null)}
+                    type="button"
                     className="btn-secondary" /* Use btn-secondary */
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => handleApply(showApplyModal._id)}
+                    type="submit"
+                    data-submit-apply
                     className="btn-primary" /* Use btn-primary */
                   >
-                    Submit
+                    Submit Application
                   </button>
                 </div>
               </div>
@@ -537,10 +583,10 @@ export default function Jobs() {
         )}
 
         {showChatModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal">
-            <div className="bg-accent p-6 rounded-lg shadow-lg w-full max-w-lg modal-content"> {/* Use bg-accent */}
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal p-4">
+            <div className="bg-accent p-6 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] flex flex-col modal-content">
               <h2 className="text-xl font-bold text-primary mb-4">Chat</h2>
-              <div className="h-64 overflow-y-auto mb-4 bg-background p-2 rounded"> {/* Use bg-background */}
+              <div className="flex-1 overflow-y-auto mb-4 bg-background p-3 rounded min-h-[200px] max-h-[400px]">
                 {chatMessages.map((msg, index) => (
                   <div
                     key={index}

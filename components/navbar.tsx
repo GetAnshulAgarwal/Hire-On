@@ -15,12 +15,14 @@ interface NavbarProps {
 export default function Navbar({ userType = "candidate" }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profilePic, setProfilePic] = useState<string>("/images/default-profile.png");
   const [imageError, setImageError] = useState(false);
   const [showPreferencesPopup, setShowPreferencesPopup] = useState(false);
   const [preferredSkills, setPreferredSkills] = useState<string[]>([]);
   const [preferredDomains, setPreferredDomains] = useState<string[]>([]);
   const [username, setUsername] = useState<string>("");
+  const [notifications, setNotifications] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -173,12 +175,43 @@ export default function Navbar({ userType = "candidate" }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="btn-icon relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 bg-primary text-xs text-accent rounded-full h-4 w-4 flex items-center justify-center">
-              2
-            </span>
-          </button>
+          <div className="relative">
+            <button 
+              className="btn-icon relative"
+              onClick={() => {
+                console.log("🔔 Notification bell clicked");
+                setIsNotificationOpen(!isNotificationOpen);
+              }}
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-xs text-accent rounded-full h-4 w-4 flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+            
+            {isNotificationOpen && (
+              <div className="absolute right-0 mt-2 w-80 dropdown-menu rounded-md shadow-lg z-30 animate-fade-in max-h-96 overflow-y-auto">
+                <div className="p-3 border-b border-border">
+                  <p className="text-sm font-medium">Notifications</p>
+                </div>
+                {notifications.length > 0 ? (
+                  notifications.map((notif, index) => (
+                    <div key={index} className="dropdown-item border-b border-border last:border-0">
+                      <p className="text-sm">{notif.message}</p>
+                      <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-400">
+                    <p className="text-sm">No new notifications</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className="relative">
             <div 

@@ -16,15 +16,60 @@ export default function Register() {
     profilePic: null,
     resume: null,
   });
+  const [passwordStrength, setPasswordStrength] = useState("");
   const router = useRouter();
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const checkPasswordStrength = (password) => {
+    if (password.length === 0) return "";
+    if (password.length < 8) return "weak";
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) return "medium";
+    if (!/(?=.*[!@#$%^&*])/.test(password)) return "good";
+    return "strong";
+  };
+
+  const handleChange = (e) => {
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+    if (e.target.name === "password") {
+      setPasswordStrength(checkPasswordStrength(e.target.value));
+    }
+  };
   const handleFileChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.files[0] });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Password validation
+    if (formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      toast.error("Password must contain uppercase, lowercase, and number");
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
+    // File size validation
+    if (formData.profilePic && formData.profilePic.size > 5 * 1024 * 1024) {
+      toast.error("Profile picture must be less than 5MB");
+      return;
+    }
+    
+    if (formData.resume && formData.resume.size > 10 * 1024 * 1024) {
+      toast.error("Resume must be less than 10MB");
       return;
     }
 
@@ -103,6 +148,33 @@ export default function Register() {
               className="input-field" // Use input-field
               required
             />
+            {passwordStrength && (
+              <div className="mt-2">
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 ${
+                        passwordStrength === 'weak' ? 'w-1/4 bg-danger' :
+                        passwordStrength === 'medium' ? 'w-2/4 bg-warning' :
+                        passwordStrength === 'good' ? 'w-3/4 bg-info' :
+                        'w-full bg-success'
+                      }`}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium ${
+                    passwordStrength === 'weak' ? 'text-danger' :
+                    passwordStrength === 'medium' ? 'text-warning' :
+                    passwordStrength === 'good' ? 'text-info' :
+                    'text-success'
+                  }`}>
+                    {passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Use 8+ characters with uppercase, lowercase, numbers & symbols
+                </p>
+              </div>
+            )}
           </div>
           <div>
             <label htmlFor="confirmPassword" className="block uppercase text-sm text-foreground">Confirm Password</label> {/* Use text-foreground */}
