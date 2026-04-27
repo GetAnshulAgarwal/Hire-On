@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { skillOptions, domainOptions } from "@/lib/utils";
 import io from "socket.io-client";
-import { Briefcase, FileText, BarChart, MessageSquare, ChevronRight, Clock, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { Briefcase, FileText, BarChart, MessageSquare, ChevronRight, Clock, CheckCircle, AlertCircle, X, Settings } from 'lucide-react';
 import Link from "next/link";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
-  const [applications, setApplications] = useState([]); // New state for applications
+  const [applications, setApplications] = useState([]);
   const [userSkills, setUserSkills] = useState([]);
   const [preferredSkills, setPreferredSkills] = useState([]);
   const [preferredDomains, setPreferredDomains] = useState([]);
@@ -23,12 +23,12 @@ export default function Dashboard() {
   const [coverLetter, setCoverLetter] = useState("");
   const [hasPreferences, setHasPreferences] = useState(false);
   const [toastShown, setToastShown] = useState(false);
-  const [showChatModal, setShowChatModal] = useState(null); // Chat modal state
-  const [chatMessages, setChatMessages] = useState([]); // Chat messages state
-  const [newMessage, setNewMessage] = useState(""); // New message input
-  const [attachment, setAttachment] = useState(null); // Attachment input
-  const [notifications, setNotifications] = useState([]); // Notifications state
-  const [socket, setSocket] = useState(null); // Socket.IO instance
+  const [showChatModal, setShowChatModal] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [attachment, setAttachment] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [socket, setSocket] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -71,7 +71,7 @@ export default function Dashboard() {
         setHasPreferences(profile.preferredSkills?.length > 0 || profile.preferredDomains?.length > 0);
         setJobs(jobsData);
         setAppliedJobs(appsData.map((app) => app.job._id));
-        setApplications(appsData); // Set applications
+        setApplications(appsData);
 
         if (!profile.preferredSkills?.length && !profile.preferredDomains?.length && !toastShown) {
           toast.custom(
@@ -92,10 +92,7 @@ export default function Dashboard() {
                 </button>
               </div>
             ),
-            {
-              duration: 5000,
-              position: "top-right",
-            }
+            { duration: 5000, position: "top-right" }
           );
           setToastShown(true);
         }
@@ -132,19 +129,17 @@ export default function Dashboard() {
     };
   }, [router, toastShown, showChatModal]);
 
-  // Rest of the component remains the same...
-
   const getMissingSkills = (job) => {
     return job.skills.filter((skill) => !userSkills.includes(skill));
   };
 
-  const handleSkillChange = (skill) => {
+  const handleSkillChange = (skill: string) => {
     setPreferredSkills((prev) =>
       prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
     );
   };
 
-  const handleDomainChange = (domain) => {
+  const handleDomainChange = (domain: string) => {
     setPreferredDomains((prev) =>
       prev.includes(domain) ? prev.filter((d) => d !== domain) : [...prev, domain]
     );
@@ -217,7 +212,7 @@ export default function Dashboard() {
       if (!applyRes.ok) throw new Error(`Application submission failed with status: ${applyRes.status}`);
       const newApplication = await applyRes.json();
       setAppliedJobs((prev) => [...prev, jobId]);
-      setApplications((prev) => [...prev, newApplication]); // Update applications
+      setApplications((prev) => [...prev, newApplication]);
       setShowApplyModal(null);
       setResumeFile(null);
       setCoverLetter("");
@@ -231,12 +226,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleChat = async (application) => { // Modified to accept the application object directly
+  const handleChat = async (application) => {
     const token = localStorage.getItem("token");
     try {
-      // Use application._id for fetching chat history
       const res = await fetch(`http://localhost:5000/api/chat/${application._id}`, {
-        headers: { Authorization: `Bearer ${token}`, "Cache-Control": "no-cache" }, // Added no-cache
+        headers: { Authorization: `Bearer ${token}`, "Cache-Control": "no-cache" },
       });
       if (!res.ok) throw new Error("Failed to load chat");
       const chat = await res.json();
@@ -261,18 +255,14 @@ export default function Dashboard() {
     if (attachment) formData.append("attachment", attachment);
 
     try {
-      // Use showChatModal.application (which is the applicationId) for the POST request
       const res = await fetch(`http://localhost:5000/api/chat/${showChatModal.application}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       if (!res.ok) throw new Error("Failed to send message");
-      const sentMessage = await res.json(); // Get the message object from the backend response
-
-      // Optimistically update the chat messages state for instant display
+      const sentMessage = await res.json();
       setChatMessages((prev) => [...prev, sentMessage]);
-
       socket.emit("sendMessage", { chatId: showChatModal._id, message: sentMessage });
       setNewMessage("");
       setAttachment(null);
@@ -335,7 +325,7 @@ export default function Dashboard() {
               View all jobs <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobs.slice(0, 6).map((job, index) => (
               <div
@@ -343,7 +333,7 @@ export default function Dashboard() {
                 className="card job-card group"
                 onMouseEnter={() => setHoveredJob(job)}
                 onMouseLeave={() => setHoveredJob(null)}
-                style={{animationDelay: `${index * 0.1}s`}}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="p-2 rounded-lg bg-primary bg-opacity-20">
@@ -355,18 +345,16 @@ export default function Dashboard() {
                     </span>
                   )}
                 </div>
-                
+
                 <h3 className="font-semibold text-lg mb-2 text-white group-hover:text-primary transition-colors">
                   {job.title}
                 </h3>
-                
+
                 <div className="space-y-2 mb-4">
                   <p className="text-sm text-gray-300">{job.details}</p>
                   <div className="flex flex-wrap gap-1">
                     {job.skills.slice(0, 3).map(skill => (
-                      <span key={skill} className="skill-tag">
-                        {skill}
-                      </span>
+                      <span key={skill} className="skill-tag">{skill}</span>
                     ))}
                     {job.skills.length > 3 && (
                       <span className="skill-tag">+{job.skills.length - 3}</span>
@@ -376,7 +364,7 @@ export default function Dashboard() {
                     <span className="font-medium text-primary">Salary:</span> {job.salary || "Not specified"}
                   </p>
                 </div>
-                
+
                 <div className="mt-auto pt-3 border-t border-border flex justify-end">
                   <button
                     onClick={() => (appliedJobs.includes(job._id) ? null : setShowApplyModal(job))}
@@ -390,7 +378,7 @@ export default function Dashboard() {
                     {appliedJobs.includes(job._id) ? "Applied" : "Apply Now"}
                   </button>
                 </div>
-                
+
                 {hoveredJob === job && (
                   <div className="absolute top-0 left-0 w-full h-full bg-accent bg-opacity-95 p-4 rounded-lg shadow-lg z-10 animate-fade-in flex flex-col">
                     <h4 className="text-primary font-semibold mb-2">Skills Match Analysis</h4>
@@ -403,7 +391,6 @@ export default function Dashboard() {
                           <li>None - Perfect match!</li>
                         )}
                       </ul>
-                      
                       <h5 className="text-white font-medium mb-1">Your Matching Skills:</h5>
                       <ul className="list-disc pl-5 text-gray-300">
                         {job.skills.filter(skill => userSkills.includes(skill)).map((skill) => (
@@ -411,10 +398,7 @@ export default function Dashboard() {
                         ))}
                       </ul>
                     </div>
-                    <button 
-                      className="mt-4 btn-primary w-full"
-                      onClick={() => setHoveredJob(null)}
-                    >
+                    <button className="mt-4 btn-primary w-full" onClick={() => setHoveredJob(null)}>
                       Close
                     </button>
                   </div>
@@ -425,7 +409,7 @@ export default function Dashboard() {
         </section>
 
         {/* My Applications Section */}
-        <section className="mb-12 animate-fade-in" style={{animationDelay: "0.2s"}}>
+        <section className="mb-12 animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <h2 className="text-2xl font-semibold text-white mb-6">My Applications</h2>
           {applications.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -443,15 +427,13 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <p className="text-sm text-gray-300 mb-4">
-                    Applied on: {new Date(app.createdAt).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'short', 
-                      day: 'numeric' 
+                    Applied on: {new Date(app.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric', month: 'short', day: 'numeric'
                     })}
                   </p>
                   <div className="flex justify-end">
                     <button
-                      onClick={() => handleChat(app)} // Pass the application object directly
+                      onClick={() => handleChat(app)}
                       className="btn-primary flex items-center gap-2"
                     >
                       <MessageSquare className="h-4 w-4" />
@@ -476,7 +458,7 @@ export default function Dashboard() {
         </section>
 
         {/* Quick Actions */}
-        <section className="mb-12 animate-fade-in" style={{animationDelay: "0.3s"}}>
+        <section className="mb-12 animate-fade-in" style={{ animationDelay: "0.3s" }}>
           <h2 className="text-2xl font-semibold text-white mb-6">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             <Link href="/resume-extraction" className="card hover:border-primary group">
@@ -490,7 +472,7 @@ export default function Dashboard() {
                 Upload your resume and let our AI extract your skills and experience.
               </p>
             </Link>
-            
+
             <Link href="/track-applications" className="card hover:border-primary group">
               <div className="p-3 rounded-full bg-primary bg-opacity-20 inline-block mb-4 group-hover:bg-primary group-hover:bg-opacity-30 transition-all">
                 <BarChart className="h-6 w-6 text-primary" />
@@ -502,10 +484,13 @@ export default function Dashboard() {
                 Monitor the status of all your job applications in one place.
               </p>
             </Link>
-            
-            <div className="card hover:border-primary group cursor-pointer" onClick={() => setShowPreferencesPopup(true)}>
+
+            <div
+              className="card hover:border-primary group cursor-pointer"
+              onClick={() => setShowPreferencesPopup(true)}
+            >
               <div className="p-3 rounded-full bg-primary bg-opacity-20 inline-block mb-4 group-hover:bg-primary group-hover:bg-opacity-30 transition-all">
-                {/* <Settings className="h-6 w-6 text-primary" /> */}
+                <Settings className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors mb-2">
                 Update Preferences
@@ -543,19 +528,76 @@ export default function Dashboard() {
                   />
                 </div>
                 <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    onClick={() => setShowApplyModal(null)}
-                    className="btn-secondary"
-                  >
+                  <button onClick={() => setShowApplyModal(null)} className="btn-secondary">
                     Cancel
                   </button>
-                  <button
-                    onClick={() => handleApply(showApplyModal._id)}
-                    className="btn-primary"
-                  >
+                  <button onClick={() => handleApply(showApplyModal._id)} className="btn-primary">
                     Submit Application
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Preferences Modal */}
+        {showPreferencesPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal">
+            <div className="bg-accent p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
+              <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                <span>{hasPreferences ? "Update Preferences" : "Set Your Preferences"}</span>
+              </h2>
+
+              <div className="space-y-6">
+                {/* Skills */}
+                <div>
+                  <h3 className="text-white font-medium mb-3">Preferred Skills</h3>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                    {skillOptions.map((skill) => (
+                      <button
+                        key={skill}
+                        onClick={() => handleSkillChange(skill)}
+                        className={`px-3 py-1 rounded-full text-sm transition-all ${
+                          preferredSkills.includes(skill)
+                            ? "bg-primary text-background font-medium"
+                            : "bg-background text-gray-300 border border-border hover:border-primary"
+                        }`}
+                      >
+                        {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Domains */}
+                <div>
+                  <h3 className="text-white font-medium mb-3">Preferred Domains</h3>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                    {domainOptions.map((domain) => (
+                      <button
+                        key={domain}
+                        onClick={() => handleDomainChange(domain)}
+                        className={`px-3 py-1 rounded-full text-sm transition-all ${
+                          preferredDomains.includes(domain)
+                            ? "bg-primary text-background font-medium"
+                            : "bg-background text-gray-300 border border-border hover:border-primary"
+                        }`}
+                      >
+                        {domain}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-6">
+                <button onClick={() => setShowPreferencesPopup(false)} className="btn-secondary">
+                  Cancel
+                </button>
+                <button onClick={savePreferences} className="btn-primary">
+                  Save Preferences
+                </button>
               </div>
             </div>
           </div>
@@ -577,12 +619,10 @@ export default function Dashboard() {
                     <div
                       key={index}
                       className={`mb-3 ${
-                        msg.sender === localStorage.getItem("userId") 
-                          ? "text-right" 
-                          : "text-left"
+                        msg.sender === localStorage.getItem("userId") ? "text-right" : "text-left"
                       }`}
                     >
-                      <div 
+                      <div
                         className={`inline-block p-3 rounded-lg max-w-[80%] ${
                           msg.sender === localStorage.getItem("userId")
                             ? "bg-primary text-background"
@@ -591,9 +631,9 @@ export default function Dashboard() {
                       >
                         <p>{msg.content}</p>
                         {msg.attachment && (
-                          <a 
-                            href={`http://localhost:5000${msg.attachment}`} 
-                            target="_blank" 
+                          <a
+                            href={`http://localhost:5000${msg.attachment}`}
+                            target="_blank"
                             className="text-blue-300 underline text-sm mt-1 inline-block"
                           >
                             {msg.attachmentType === "link" ? msg.content : `Attachment (${msg.attachmentType})`}
@@ -627,16 +667,10 @@ export default function Dashboard() {
                     className="text-sm text-gray-300"
                   />
                   <div className="flex space-x-3">
-                    <button
-                      onClick={() => setShowChatModal(null)}
-                      className="btn-secondary"
-                    >
+                    <button onClick={() => setShowChatModal(null)} className="btn-secondary">
                       Close
                     </button>
-                    <button
-                      onClick={sendMessage}
-                      className="btn-primary"
-                    >
+                    <button onClick={sendMessage} className="btn-primary">
                       Send
                     </button>
                   </div>
