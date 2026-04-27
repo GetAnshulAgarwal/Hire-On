@@ -82,7 +82,7 @@ export default function Register() {
     if (userType === "candidate" && formData.resume) form.append("resume", formData.resume);
 
     console.log("FormData contents:");
-    for (let [key, value] of form.entries()) {
+    for (const [key, value] of form.entries()) {
       console.log(`${key}: ${value instanceof File ? value.name : value}`);
     }
 
